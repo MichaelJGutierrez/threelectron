@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <link rel="stylesheet" href="main.css"/>
+      <link href="https://fonts.googleapis.com/css?family=Quicksand" rel="stylesheet">
+
+      <script>window.$ = window.jQuery = require('./jquery-3.3.1.min.js');</script>
+      <script src="threeJsSrc/build/three.min.js"></script>
+      <script src="threeJsSrc/examples/js/loaders/GLTFLoader.js"></script>
+      <script src="threeJsSrc/examples/js/controls/OrbitControls.js"></script>
+      
+      <title>Trineo 3d application</title>
+    </head>
+    <body>
+      <div>
+        <div id="logo">
+          <img src="images/3dLogo.png" alt=""/>
+        </div>
+        <div>
+        <div id="inputs">
+          <div id="lightingControls">
+            <label for="blueAmbient">Blue Ambient</label>
+            <input type="checkbox" id="blueAmbient" onclick="updateAmbientLight(this,'0x0000ff')">
+          </div>
+        </div>
+        </div>
+      </div>
+    </body>
+    <script>
+      var controls, camera, scene, renderer;
+      var geometry, material, mesh, mixer;
+      var ambientLight, pointLight;
+
+      var loader = new THREE.GLTFLoader(),
+          textureLoader = new THREE.TextureLoader();
+      
+      init();
+      loadGltfObj('3d/trineoText3d2.gltf', false);
+      for(var i = 0; i < 500; i++){
+        loadGltfObj('3d/trineoLogoAnimated.gltf', true);
+      }
+      animate();
+      
+      function init() {
+        //Camera
+        camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, .5, 100000 );
+        cameraCube = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, .5, 100000 );
+        camera.position.z = 1;
+      
+        //Scene
+        scene = new THREE.Scene();
+        sceneCube = new THREE.Scene();
+        
+        //Load Background image
+        scene.background = loadTexture("images/nebula.jpg");
+
+        //Camera controls
+        controls = new THREE.OrbitControls( camera );
+        controls.minDistance = 5;
+        controls.maxDistance = 50;
+
+        //Lights
+        ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        scene.add(ambientLight);
+        
+        //Render 
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+      }
+
+      function loadTexture(imgSrc){
+        let texture = textureLoader.load(imgSrc,
+          function ( texture ) {
+              var img = texture.image;
+              bgWidth= img.width;
+              bgHeight = img.height;
+          } 
+        )
+        return texture;
+      }
+
+      function rand(min, max) {
+          return Math.floor(Math.random() * (max - min) ) + min;
+      }
+      
+      function loadGltfObj(object, randomPos){
+        loader.load(
+          object,
+          function ( gltf ) {
+            scene.add( gltf.scene );
+            if(randomPos){
+              gltf.scene.position.set(rand(-30,30), rand(-30,30), rand(-30,30));
+            }
+            //rotateObject(gltf.scene, 0,rand(0,360),0);
+            //scaleObject(gltf.scene, rand(2,4));
+          },
+          // called while loading is progressing
+          function ( xhr ) {
+            console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+          },
+          // called when loading has errors
+          function ( error ) {
+            console.log( 'An error happened' );
+          }
+        );
+      }
+
+      function scaleObject(object, scale){
+        object.scale.set(scale, scale, scale);
+      }
+
+      function rotateObject(object, degreeX, degreeY, degreeZ){
+        degreeX = (degreeX * Math.PI)/180;
+        degreeY = (degreeY * Math.PI)/180;
+        degreeZ = (degreeZ * Math.PI)/180;
+     
+        object.rotateX(degreeX);
+        object.rotateY(degreeY);
+        object.rotateZ(degreeZ);
+      }
+
+      function update () {
+        mixer.update( deltaSeconds );
+      }
+
+      function animate() {
+        requestAnimationFrame( animate );
+        controls.update();
+        renderer.render( scene, camera );
+      
+      }
+
+      function updateAmbientLight(t,hexcode){
+        if(t.checked){
+          ambientLight.color.setHex(hexcode);
+        }else{
+          ambientLight.color.setHex(0xffffff);
+        }
+      }
+
+    </script>
+  </html>
